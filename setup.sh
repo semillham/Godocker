@@ -59,7 +59,7 @@ validate_mount_dir() {
   case "$resolved_path" in
     ""|"/"|"/bin"|"/boot"|"/dev"|"/etc"|"/home"|"/lib"|"/lib64"|"/opt"|"/proc"|"/root"|"/run"|"/sbin"|"/srv"|"/sys"|"/tmp"|"/usr"|"/var"|"$HOME"|"$TARGET_HOME")
       echo "Safety Error: Refusing to mount or relabel sensitive path: ${resolved_path}"
-      echo "Please run setup.sh inside a dedicated project folder (e.g., ~/godot-workspace)."
+      echo "Please run this script inside a dedicated project folder (e.g., ~/godot-workspace)."
       exit 1
       ;;
   esac
@@ -173,19 +173,8 @@ fi
 handle_existing_container
 
 echo ""
-echo "Select Godot edition:"
-echo "  1) C# + GDScript (4.3-csharp)"
-echo "  2) GDScript only (4.3-gdscript)"
-read -r -p "Choice [1]: " EDITION_CHOICE
-EDITION_CHOICE="${EDITION_CHOICE:-1}"
-
-if [ "$EDITION_CHOICE" = "2" ]; then
-  USE_MONO="false"
-  TAG="4.3-gdscript"
-else
-  USE_MONO="true"
-  TAG="4.3-csharp"
-fi
+read -r -p "Godot version tag [4.7.2-stable]: " GODOT_VERSION
+GODOT_VERSION="${GODOT_VERSION:-4.7.2-stable}"
 
 read -r -p "Screen resolution [1920x1080]: " RESOLUTION
 RESOLUTION="${RESOLUTION:-1920x1080}"
@@ -202,11 +191,11 @@ PROJECTS_DIR="$(validate_mount_dir "./projects")"
 CONFIG_DIR="$(validate_mount_dir "./godot-config")"
 DATA_DIR="$(validate_mount_dir "./godot-data")"
 
-IMAGE_NAME="godot-4510:${TAG}"
+IMAGE_NAME="godot-4510:${GODOT_VERSION}"
 echo ""
-echo "Building ${IMAGE_NAME} (this may take a few minutes the first time)..."
+echo "Building ${IMAGE_NAME} (supports both GDScript and C#; first build may take a few minutes)..."
 "$ENGINE" build \
-  --build-arg USE_MONO="$USE_MONO" \
+  --build-arg GODOT_VERSION="$GODOT_VERSION" \
   -t "$IMAGE_NAME" .
 
 if [ "$ENGINE" = "podman" ]; then

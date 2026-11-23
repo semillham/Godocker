@@ -13,6 +13,9 @@ RUN microdnf update -y \
         fontconfig \
         mesa-dri-drivers \
         mesa-libGL \
+        mesa-vulkan-drivers \
+        vulkan-loader \
+        vulkan-tools \
         libX11 \
         libXcursor \
         libXrandr \
@@ -20,6 +23,8 @@ RUN microdnf update -y \
         libXinerama \
         libXext \
         libXrender \
+        libXfixes \
+        libXdamage \
         alsa-lib \
         xorg-x11-server-Xvfb \
         x11vnc \
@@ -29,10 +34,10 @@ RUN microdnf update -y \
         dotnet-sdk-8.0 \
     && microdnf clean all
 
-# Download and install Godot (adjust version/URL as needed)
-
-ARG GODOT_VERSION=4.3-stable
-RUN DIR_NAME="Godot_v${GODOT_VERSION}_mono_linux.x86_64" \
+# Download and install Godot (.NET build includes both C# and GDScript)
+ARG GODOT_VERSION=4.7.2-stable
+RUN set -euo pipefail \
+    && DIR_NAME="Godot_v${GODOT_VERSION}_mono_linux.x86_64" \
     && ZIP_NAME="${DIR_NAME}.zip" \
     && wget -q "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/${ZIP_NAME}" -O /tmp/godot.zip \
     && unzip -q /tmp/godot.zip -d /opt/godot \
@@ -59,12 +64,12 @@ RUN DIR_NAME="Godot_v${GODOT_VERSION}_mono_linux.x86_64" \
 RUN mkdir -p /home/godot/projects /home/godot/.config/godot /home/godot/.local/share/godot \
     && chown -R 1000:1000 /home/godot
 
-ENV HOME=/home/godot \ 
+ENV HOME=/home/godot \
     RESOLUTION=1920x1080
 
 EXPOSE 4510
 USER 1000
 
-WORKDIR /home/godot
+WORKDIR /home/godot/projects
 
 CMD ["/usr/local/bin/start-godot.sh"]
