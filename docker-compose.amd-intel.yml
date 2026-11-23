@@ -1,0 +1,4 @@
+services:
+  godot:
+    devices:
+      - "/dev/dri:/dev/dri"

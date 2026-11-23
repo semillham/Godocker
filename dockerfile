@@ -5,6 +5,8 @@ RUN microdnf update -y \
     && microdnf install -y --setopt=install_weak_deps=0 \
         epel-release \
     && microdnf install -y --setopt=install_weak_deps=0 \
+        bash \
+        git \
         wget \
         unzip \
         ca-certificates \
@@ -24,34 +26,45 @@ RUN microdnf update -y \
         novnc \
         python3-websockify \
         fluxbox \
+        dotnet-sdk-8.0 \
     && microdnf clean all
 
 # Download and install Godot (adjust version/URL as needed)
 
 ARG GODOT_VERSION=4.3-stable
-RUN wget -q "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/Godot_v${GODOT_VERSION}_linux.x86_64.zip" -O /tmp/godot.zip \
+RUN DIR_NAME="Godot_v${GODOT_VERSION}_mono_linux.x86_64" \
+    && ZIP_NAME="${DIR_NAME}.zip" \
+    && wget -q "https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}/${ZIP_NAME}" -O /tmp/godot.zip \
     && unzip -q /tmp/godot.zip -d /opt/godot \
-    && mv /opt/godot/Godot_v${GODOT_VERSION}_linux.x86_64 /usr/local/bin/godot \
+    && mv "/opt/godot/${DIR_NAME}/${DIR_NAME}" /usr/local/bin/godot \
+    && mv "/opt/godot/${DIR_NAME}/GodotSharp" /usr/local/bin/GodotSharp \
     && chmod +x /usr/local/bin/godot \
     && rm -rf /tmp/godot.zip /opt/godot \
     && printf '%s\n' \
-    '#!/usr/bin/env bash' \
-    'set -e' \
-    'export DISPLAY=:1' \
-    'Xvfb :1 -screen 0 1280x720x24 &' \
-    'sleep 1' \
-    'fluxbox &' \
-    'x11vnc -display :1 -nopw -forever -shared -rfbport 5900 &' \
-    'websockify --web /usr/share/novnc/ 4510 localhost:5900 &' \
-    'exec godot' \
-    > /usr/local/bin/start-godot.sh \
+        '#!/usr/bin/env bash' \
+        'set -euo pipefail' \
+        'export DISPLAY=:1' \
+        'RES="${RESOLUTION:-1920x1080}"' \
+        'cleanup() { jobs -p | xargs -r kill 2>/dev/null || true; }' \
+        'trap cleanup EXIT INT TERM' \
+        'Xvfb :1 -screen 0 "${RES}x24" &' \
+        'sleep 1' \
+        'fluxbox &' \
+        'x11vnc -display :1 -nopw -forever -shared -rfbport 5900 &' \
+        'websockify --web /usr/share/novnc/ 4510 localhost:5900 &' \
+        'godot' \
+        > /usr/local/bin/start-godot.sh \
     && chmod +x /usr/local/bin/start-godot.sh
 
-RUN mkdir -p /home/godot && chown -R 1000:1000 /home/godot
+RUN mkdir -p /home/godot/projects /home/godot/.config/godot /home/godot/.local/share/godot \
+    && chown -R 1000:1000 /home/godot
+
+ENV HOME=/home/godot \ 
+    RESOLUTION=1920x1080
 
 EXPOSE 4510
 USER 1000
-ENV HOME=/home/godot
+
 WORKDIR /home/godot
 
 CMD ["/usr/local/bin/start-godot.sh"]

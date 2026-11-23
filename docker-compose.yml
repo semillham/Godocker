@@ -1,0 +1,13 @@
+services:
+  godot:
+    build: .
+    container_name: godot-home
+    ports:
+      - "4510:4510"
+    environment:
+      - RESOLUTION=1920x1080
+    volumes:
+      - ./projects:/home/godot/projects
+      - ./godot-config:/home/godot/.config/godot
+      - ./godot-data:/home/godot/.local/share/godot
+    restart: unless-stopped
