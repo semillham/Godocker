@@ -180,4 +180,4 @@ Verify that the entered version tag matches an exact release tag on the official
 
 ## Roadmap Notes
 
-This deployment script (`startup.sh`) targets a **single home workstation** (`godot-home` on port `4510`). Future multi-user enterprise deployments will extend this image by parameterizing per-user container names, isolated user storage directories, dynamic port or reverse-proxy routing, VNC/web authentication, and per-user CPU/memory quotas.
+This deployment script (`startup.sh`) targets a **single home workstation** (`godot-home` on port `4510`).
